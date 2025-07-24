@@ -29,7 +29,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<JwtHelper>();
-builder.Services.AddScoped<IGitHubService, GitHubService>();
+builder.Services.AddHttpClient<IGitHubService, GitHubService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 
 builder.Services.AddDbContext<BTDbContext>(options =>

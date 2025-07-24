@@ -4,6 +4,6 @@
     {
         public string Name { get; set; } = "";
         public string Full_Name { get; set; } = "";
-        public Owner Owner { get; set; } = new();
+        public OwnerDto Owner { get; set; } = new();
     }
 }
