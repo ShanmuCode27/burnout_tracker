@@ -11,6 +11,7 @@ namespace BurnoutTracker.Services
     {
         Task SaveUserTokenAsync(long userId, string token);
         Task<List<RepoDto>> GetUserReposAsync(long userId);
+        Task<List<ContributorDto>> GetContributorsAsync(string owner, string repo, string? token = null);
     }
 
 
@@ -18,11 +19,13 @@ namespace BurnoutTracker.Services
     {
         private readonly BTDbContext _db;
         private readonly HttpClient _client;
+        private readonly ILogger _logger;
 
-        public GitHubService(BTDbContext db, IHttpClientFactory factory)
+        public GitHubService(BTDbContext db, IHttpClientFactory factory, ILogger logger)
         {
             _db = db;
             _client = factory.CreateClient("GitHub");
+            _logger = logger;
         }
 
         public async Task SaveUserTokenAsync(long userId, string token)
@@ -60,6 +63,31 @@ namespace BurnoutTracker.Services
             {
                 PropertyNameCaseInsensitive = true
             }) ?? new List<RepoDto>();
+        }
+
+        public async Task<List<ContributorDto>> GetContributorsAsync(string owner, string repo, string? token = null)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{owner}/{repo}/contributors");
+            request.Headers.UserAgent.ParseAdd("burnout-tracker-app");
+
+            if (!string.IsNullOrEmpty(token))
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _client.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogError("GitHub API error: {StatusCode} {Message}", response.StatusCode, content);
+                throw new Exception("Failed to fetch contributors");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var contributors = JsonSerializer.Deserialize<List<ContributorDto>>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            return contributors ?? new List<ContributorDto>();
         }
     }
 }

@@ -31,5 +31,12 @@ namespace BurnoutTracker.Controllers
             return Ok(repos);
         }
 
+
+        [HttpGet("contributors")]
+        public async Task<IActionResult> GetContributors([FromQuery] string owner, [FromQuery] string repo, [FromQuery] string? token = null)
+        {
+            var contributors = await _githubService.GetContributorsAsync(owner, repo, token);
+            return Ok(contributors);
+        }
     }
 }
