@@ -7,7 +7,11 @@ namespace BurnoutTracker.Infrastructure
     {
         public BTDbContext(DbContextOptions<BTDbContext> options) : base(options) { }
 
+
+
         public DbSet<User> Users => Set<User>();
-        public DbSet<GithubToken> GitHubTokens => Set<GithubToken>();
+        public DbSet<SupportedRepository> SupportedRepositories => Set<SupportedRepository>();
+        public DbSet<RepositoryApi> RepositoryApis => Set<RepositoryApi>();
+        public DbSet<UserRepositoryConnection> UserRepositoryConnections => Set<UserRepositoryConnection>();
     }
 }

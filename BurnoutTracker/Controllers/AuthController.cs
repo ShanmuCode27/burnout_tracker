@@ -1,7 +1,6 @@
 ﻿using BurnoutTracker.Application.Dtos;
 using BurnoutTracker.Application.Services;
 using BurnoutTracker.Utilities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BurnoutTracker.Controllers
@@ -32,7 +31,7 @@ namespace BurnoutTracker.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] LoginDto dto)
+        public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
             try
             {

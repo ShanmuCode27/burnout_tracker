@@ -3,6 +3,7 @@ using System;
 using BurnoutTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,14 +11,39 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BurnoutTracker.Migrations
 {
     [DbContext(typeof(BTDbContext))]
-    partial class BTDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250726160246_addedSupportedRepositoriesAndRepositoryApis")]
+    partial class addedSupportedRepositoriesAndRepositoryApis
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            modelBuilder.Entity("BurnoutTracker.Domain.Models.GithubToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("GitHubTokens");
+                });
 
             modelBuilder.Entity("BurnoutTracker.Domain.Models.RepositoryApi", b =>
                 {
@@ -85,38 +111,15 @@ namespace BurnoutTracker.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("BurnoutTracker.Domain.Models.UserRepositoryConnection", b =>
+            modelBuilder.Entity("BurnoutTracker.Domain.Models.GithubToken", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                    b.HasOne("BurnoutTracker.Domain.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<string>("AccessToken")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("ConnectedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("RepositoryUrl")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<long>("SupportedRepositoryId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("SupportedRepositoryId1")
-                        .HasColumnType("int");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SupportedRepositoryId1");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserRepositoryConnections");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BurnoutTracker.Domain.Models.RepositoryApi", b =>
@@ -128,25 +131,6 @@ namespace BurnoutTracker.Migrations
                         .IsRequired();
 
                     b.Navigation("SupportedRepository");
-                });
-
-            modelBuilder.Entity("BurnoutTracker.Domain.Models.UserRepositoryConnection", b =>
-                {
-                    b.HasOne("BurnoutTracker.Domain.Models.SupportedRepository", "SupportedRepository")
-                        .WithMany()
-                        .HasForeignKey("SupportedRepositoryId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BurnoutTracker.Domain.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SupportedRepository");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BurnoutTracker.Domain.Models.SupportedRepository", b =>

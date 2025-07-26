@@ -9,7 +9,7 @@ namespace BurnoutTracker.Application.Services
 {
     public interface IGitHubService
     {
-        Task SaveUserTokenAsync(long userId, string token);
+        Task SaveUserTokenAsync(long userId, string token, long repositoryTypeId);
         Task<List<RepoDto>> GetUserReposAsync(long userId);
         Task<List<ContributorDto>> GetContributorsAsync(string owner, string repo, string? token = null);
     }
@@ -28,16 +28,18 @@ namespace BurnoutTracker.Application.Services
             _logger = logger;
         }
 
-        public async Task SaveUserTokenAsync(long userId, string token)
+        public async Task SaveUserTokenAsync(long userId, string token, long repositoryTypeId)
         {
-            var existing = await _db.GitHubTokens.FirstOrDefaultAsync(t => t.UserId == userId);
+            var existing = await _db.UserRepositoryConnections.FirstOrDefaultAsync(
+                t => t.UserId == userId && 
+                Equals(t.SupportedRepositoryId, repositoryTypeId));
             if (existing != null)
             {
-                existing.Token = token;
+                existing.AccessToken = token;
             }
             else
             {
-                await _db.GitHubTokens.AddAsync(new GithubToken { UserId = userId, Token = token });
+                await _db.UserRepositoryConnections.AddAsync(new UserRepositoryConnection { UserId = userId, AccessToken = token });
             }
 
             await _db.SaveChangesAsync();
@@ -45,9 +47,9 @@ namespace BurnoutTracker.Application.Services
 
         public async Task<List<RepoDto>> GetUserReposAsync(long userId)
         {
-            var token = await _db.GitHubTokens
+            var token = await _db.UserRepositoryConnections
                 .Where(t => t.UserId == userId)
-                .Select(t => t.Token)
+                .Select(t => t.AccessToken)
                 .FirstOrDefaultAsync();
 
             if (token == null) throw new UnauthorizedAccessException("GitHub token missing");

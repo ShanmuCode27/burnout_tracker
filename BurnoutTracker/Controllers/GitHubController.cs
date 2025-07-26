@@ -16,10 +16,10 @@ namespace BurnoutTracker.Controllers
         }
 
         [HttpPost("token")]
-        public async Task<IActionResult> SaveToken([FromBody] string token)
+        public async Task<IActionResult> SaveToken([FromBody] string token, [FromBody] long repositoryTypeId)
         {
             var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            await _githubService.SaveUserTokenAsync(userId, token);
+            await _githubService.SaveUserTokenAsync(userId, token, repositoryTypeId);
             return Ok();
         }
 
