@@ -1,4 +1,4 @@
-﻿using BurnoutTracker.Services;
+﻿using BurnoutTracker.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 

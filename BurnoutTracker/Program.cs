@@ -1,5 +1,5 @@
+using BurnoutTracker.Application.Services;
 using BurnoutTracker.Infrastructure;
-using BurnoutTracker.Services;
 using BurnoutTracker.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;

@@ -1,11 +1,11 @@
-﻿using BurnoutTracker.Dtos;
+﻿using BurnoutTracker.Application.Dtos;
 using BurnoutTracker.Infrastructure;
-using BurnoutTracker.Models;
+using BurnoutTracker.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace BurnoutTracker.Services
+namespace BurnoutTracker.Application.Services
 {
     public interface IGitHubService
     {

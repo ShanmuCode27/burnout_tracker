@@ -1,4 +1,4 @@
-﻿namespace BurnoutTracker.Models
+﻿namespace BurnoutTracker.Domain.Models
 {
     public class GithubToken
     {

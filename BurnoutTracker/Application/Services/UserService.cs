@@ -1,8 +1,8 @@
-﻿using BurnoutTracker.Infrastructure;
-using BurnoutTracker.Models;
+﻿using BurnoutTracker.Domain.Models;
+using BurnoutTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace BurnoutTracker.Services
+namespace BurnoutTracker.Application.Services
 {
     public interface IUserService
     {
@@ -11,7 +11,7 @@ namespace BurnoutTracker.Services
         Task<bool> ValidateCredentialsAsync(string username, string password);
     }
 
-    public class UserService: IUserService
+    public class UserService : IUserService
     {
         private readonly BTDbContext _db;
 

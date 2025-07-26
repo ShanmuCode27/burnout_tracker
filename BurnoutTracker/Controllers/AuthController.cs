@@ -1,5 +1,5 @@
-﻿using BurnoutTracker.Dtos;
-using BurnoutTracker.Services;
+﻿using BurnoutTracker.Application.Dtos;
+using BurnoutTracker.Application.Services;
 using BurnoutTracker.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

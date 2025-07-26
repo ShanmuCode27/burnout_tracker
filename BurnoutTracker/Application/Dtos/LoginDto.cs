@@ -1,4 +1,4 @@
-﻿namespace BurnoutTracker.Dtos
+﻿namespace BurnoutTracker.Application.Dtos
 {
     public class LoginDto
     {
