@@ -18,7 +18,7 @@ namespace BurnoutTracker.Application.Workers
             while (!stoppingToken.IsCancellationRequested)
             {
                 using var scope = _scopeFactory.CreateScope();
-                var burnoutService = scope.ServiceProvider.GetRequiredService<BurnoutDetectionService>();
+                var burnoutService = scope.ServiceProvider.GetRequiredService<IBurnoutDetectionService>();
 
                 try
                 {

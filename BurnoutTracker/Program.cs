@@ -51,22 +51,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
-builder.Services.AddScoped<JwtHelper>();
-builder.Services.AddHttpClient<IGitRepositoryPlatformService, GitHubService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<SeedService>();
-builder.Services.AddScoped<IRepositoryPlatformDispatcherService, RepositoryPlatformDispatcherService>();
-builder.Services.AddScoped<IBurnoutDetectionService, BurnoutDetectionService>();
-builder.Services.AddScoped<IRepoService, RepoService>();
-
-builder.Services.AddHostedService<BurnoutSyncService>();
-
-
 builder.Services.AddDbContext<BTDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("Default"),
         new MySqlServerVersion(new Version(8, 4, 0))
     ));
+
+
+builder.Services.AddScoped<JwtHelper>();
+builder.Services.AddScoped<IGitHubRepositoryPlatformService, GitHubService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<SeedService>();
+builder.Services.AddScoped<IRepositoryPlatformDispatcherService, RepositoryPlatformDispatcherService>();
+builder.Services.AddScoped<IBurnoutDetectionService, BurnoutDetectionService>();
+builder.Services.AddScoped<IRepoService, RepoService>();
+builder.Services.AddHttpClient();
+
+builder.Services.AddHostedService<BurnoutSyncService>();
+
+
 
 var app = builder.Build();
 

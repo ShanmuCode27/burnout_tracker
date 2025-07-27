@@ -2,7 +2,6 @@
 using BurnoutTracker.Domain.Models.Entities;
 using BurnoutTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace BurnoutTracker.Application.Services
 {
@@ -85,6 +84,7 @@ namespace BurnoutTracker.Application.Services
             foreach (var connection in connections)
             {
                 var activity = await _dispatcher.GetDeveloperActivityAsync(connection);
+                //var activity = new List<DeveloperActivityDto>();
 
                 foreach (var dev in activity)
                 {

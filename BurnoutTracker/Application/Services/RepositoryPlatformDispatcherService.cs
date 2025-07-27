@@ -1,4 +1,5 @@
 ﻿using BurnoutTracker.Application.Dtos;
+using BurnoutTracker.Application.Interfaces;
 using BurnoutTracker.Domain.Models.Entities;
 using BurnoutTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -13,15 +14,16 @@ namespace BurnoutTracker.Application.Services
     public class RepositoryPlatformDispatcherService: IRepositoryPlatformDispatcherService
     {
         private readonly BTDbContext _db;
-        private readonly Dictionary<string, IGitRepositoryPlatformService> _platformServices;
+        private readonly IGitHubRepositoryPlatformService _gitRepositoryPlatformService;
+        private readonly Dictionary<string, IGitRepositoryService> _platformServices;
 
-        public RepositoryPlatformDispatcherService(BTDbContext db, IGitRepositoryPlatformService gitHubPlatformService)
+        public RepositoryPlatformDispatcherService(BTDbContext db, IGitHubRepositoryPlatformService githubService)
         {
             _db = db;
-            _platformServices = new(StringComparer.OrdinalIgnoreCase)
-        {
-            { "github", gitHubPlatformService }
-        };
+            _platformServices = new Dictionary<string, IGitRepositoryService> 
+            {
+                { "github", githubService }
+            };
         }
 
         public async Task<List<DeveloperActivityDto>> GetDeveloperActivityAsync(UserRepositoryConnection connection)

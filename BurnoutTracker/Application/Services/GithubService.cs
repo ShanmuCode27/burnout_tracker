@@ -5,26 +5,25 @@ using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using BurnoutTracker.Application.Dtos.Github;
-using System.Net.Http;
+using BurnoutTracker.Application.Interfaces;
 
 namespace BurnoutTracker.Application.Services
 {
-    public interface IGitRepositoryPlatformService
+    public interface IGitHubRepositoryPlatformService: IGitRepositoryService
     {
-        Task SaveUserTokenAsync(long userId, string token, long repositoryTypeId);
-        Task<List<RepoDto>> GetUserReposAsync(long userId);
-        Task<List<ContributorDto>> GetContributorsAsync(string owner, string repo, string? token = null);
-        Task<List<DeveloperActivityDto>> GetDeveloperActivityAsync(string repositoryUrl, string? accessToken, List<RepositoryApi> supportedApis);
+        string PlatformName { get; }
     }
 
 
-    public class GitHubService : IGitRepositoryPlatformService
+    public class GitHubService : IGitHubRepositoryPlatformService
     {
         private readonly BTDbContext _db;
         private readonly HttpClient _client;
-        private readonly ILogger _logger;
+        private readonly ILogger<GitHubService> _logger;
 
-        public GitHubService(BTDbContext db, IHttpClientFactory factory, ILogger logger)
+        public string PlatformName => "GithubService";
+
+        public GitHubService(BTDbContext db, IHttpClientFactory factory, ILogger<GitHubService> logger)
         {
             _db = db;
             _client = factory.CreateClient("GitHub");
