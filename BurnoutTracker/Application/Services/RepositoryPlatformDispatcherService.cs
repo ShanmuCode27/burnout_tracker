@@ -2,7 +2,6 @@
 using BurnoutTracker.Domain.Models.Entities;
 using BurnoutTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace BurnoutTracker.Application.Services
 {
@@ -11,12 +10,12 @@ namespace BurnoutTracker.Application.Services
         Task<List<DeveloperActivityDto>> GetDeveloperActivityAsync(UserRepositoryConnection connection);
     }
 
-    public class RepositoryPlatformDispatcherService
+    public class RepositoryPlatformDispatcherService: IRepositoryPlatformDispatcherService
     {
         private readonly BTDbContext _db;
         private readonly Dictionary<string, IGitRepositoryPlatformService> _platformServices;
 
-        public RepositoryPlatformDispatcherService(BTDbContext db, GitHubService gitHubPlatformService)
+        public RepositoryPlatformDispatcherService(BTDbContext db, IGitRepositoryPlatformService gitHubPlatformService)
         {
             _db = db;
             _platformServices = new(StringComparer.OrdinalIgnoreCase)

@@ -14,10 +14,12 @@ namespace BurnoutTracker.Application.Services
     public class RepoService : IRepoService
     {
         private readonly BTDbContext _db;
+        private readonly IBurnoutDetectionService _burnoutDetectionService;
 
-        public RepoService(BTDbContext context)
+        public RepoService(BTDbContext context, IBurnoutDetectionService burnoutDetectionService)
         {
             _db = context;
+            _burnoutDetectionService = burnoutDetectionService;
         }
 
         public async Task<List<ConnectedRepositoryDto>> GetConnectedRepositoriesAsync(long userId)
@@ -60,6 +62,8 @@ namespace BurnoutTracker.Application.Services
 
             _db.UserRepositoryConnections.Add(connection);
             await _db.SaveChangesAsync();
+
+            await _burnoutDetectionService.ProcessBurnoutStatesForConnectionsAsync(connection);
         }
 
     }

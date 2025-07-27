@@ -22,9 +22,9 @@ namespace BurnoutTracker.Application.Services
     {
         private readonly BTDbContext _db;
         private readonly HttpClient _client;
-        private readonly ILogger<GitHubService> _logger;
+        private readonly ILogger _logger;
 
-        public GitHubService(BTDbContext db, IHttpClientFactory factory, ILogger<GitHubService> logger)
+        public GitHubService(BTDbContext db, IHttpClientFactory factory, ILogger logger)
         {
             _db = db;
             _client = factory.CreateClient("GitHub");

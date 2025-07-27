@@ -1,4 +1,5 @@
 using BurnoutTracker.Application.Services;
+using BurnoutTracker.Application.Workers;
 using BurnoutTracker.Infrastructure;
 using BurnoutTracker.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -54,8 +55,11 @@ builder.Services.AddScoped<JwtHelper>();
 builder.Services.AddHttpClient<IGitRepositoryPlatformService, GitHubService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<SeedService>();
+builder.Services.AddScoped<IRepositoryPlatformDispatcherService, RepositoryPlatformDispatcherService>();
+builder.Services.AddScoped<IBurnoutDetectionService, BurnoutDetectionService>();
 builder.Services.AddScoped<IRepoService, RepoService>();
-//builder.Services.AddScoped<IUserRepositoryService, UserRepositoryService>();
+
+builder.Services.AddHostedService<BurnoutSyncService>();
 
 
 builder.Services.AddDbContext<BTDbContext>(options =>
