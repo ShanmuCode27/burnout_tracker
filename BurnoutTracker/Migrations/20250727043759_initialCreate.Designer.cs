@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BurnoutTracker.Migrations
 {
     [DbContext(typeof(BTDbContext))]
-    [Migration("20250726163217_replacedGithubTokenwithUserRepositoryConnection")]
-    partial class replacedGithubTokenwithUserRepositoryConnection
+    [Migration("20250727043759_initialCreate")]
+    partial class initialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,18 +43,21 @@ namespace BurnoutTracker.Migrations
                     b.Property<int>("SupportedRepositoryId")
                         .HasColumnType("int");
 
+                    b.Property<long>("SupportedRepositoryId1")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("SupportedRepositoryId");
+                    b.HasIndex("SupportedRepositoryId1");
 
                     b.ToTable("RepositoryApis");
                 });
 
             modelBuilder.Entity("BurnoutTracker.Domain.Models.SupportedRepository", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("BaseUrl")
                         .IsRequired()
@@ -107,15 +110,12 @@ namespace BurnoutTracker.Migrations
                     b.Property<long>("SupportedRepositoryId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("SupportedRepositoryId1")
-                        .HasColumnType("int");
-
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SupportedRepositoryId1");
+                    b.HasIndex("SupportedRepositoryId");
 
                     b.HasIndex("UserId");
 
@@ -126,7 +126,7 @@ namespace BurnoutTracker.Migrations
                 {
                     b.HasOne("BurnoutTracker.Domain.Models.SupportedRepository", "SupportedRepository")
                         .WithMany("Endpoints")
-                        .HasForeignKey("SupportedRepositoryId")
+                        .HasForeignKey("SupportedRepositoryId1")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -137,7 +137,7 @@ namespace BurnoutTracker.Migrations
                 {
                     b.HasOne("BurnoutTracker.Domain.Models.SupportedRepository", "SupportedRepository")
                         .WithMany()
-                        .HasForeignKey("SupportedRepositoryId1")
+                        .HasForeignKey("SupportedRepositoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

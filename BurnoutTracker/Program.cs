@@ -33,6 +33,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine("JWT Auth Failed: " + context.Exception.Message);
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                Console.WriteLine("JWT Challenge triggered");
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddAuthorization();
 
@@ -40,7 +54,7 @@ builder.Services.AddScoped<JwtHelper>();
 builder.Services.AddHttpClient<IGitHubService, GitHubService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<SeedService>();
-
+builder.Services.AddScoped<IRepoService, RepoService>();
 
 builder.Services.AddDbContext<BTDbContext>(options =>
     options.UseMySql(

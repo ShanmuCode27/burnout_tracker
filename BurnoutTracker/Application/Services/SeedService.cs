@@ -27,49 +27,49 @@ namespace BurnoutTracker.Application.Services
                 _context.RepositoryApis.AddRange(
                     new RepositoryApi
                     {
-                        SupportedRepositoryId = githubRepo.Id,
+                        SupportedRepository = githubRepo,
                         Name = "Get Contributors",
                         Path = "/repos/{owner}/{repo}/contributors",
                         Method = "GET"
                     },
                     new RepositoryApi
                     {
-                        SupportedRepositoryId = githubRepo.Id,
+                        SupportedRepository = githubRepo,
                         Name = "Get Commits",
                         Path = "/repos/{owner}/{repo}/commits",
                         Method = "GET"
                     },
                     new RepositoryApi
                     {
-                        SupportedRepositoryId = githubRepo.Id,
+                        SupportedRepository = githubRepo,
                         Name = "Get Pulls",
                         Path = "/repos/{owner}/{repo}/pulls?state=all",
                         Method = "GET"
                     },
                     new RepositoryApi
                     {
-                        SupportedRepositoryId = githubRepo.Id,
+                        SupportedRepository = githubRepo,
                         Name = "Get Issues",
                         Path = "/repos/{owner}/{repo}/issues?state=all",
                         Method = "GET"
                     },
                     new RepositoryApi
                     {
-                        SupportedRepositoryId = githubRepo.Id,
+                        SupportedRepository = githubRepo,
                         Name = "Get Commit Activity",
                         Path = "/repos/{owner}/{repo}/stats/commit_activity",
                         Method = "GET"
                     },
                     new RepositoryApi
                     {
-                        SupportedRepositoryId = githubRepo.Id,
+                        SupportedRepository = githubRepo,
                         Name = "Get Participation",
                         Path = "/repos/{owner}/{repo}/stats/participation",
                         Method = "GET"
                     },
                     new RepositoryApi
                     {
-                        SupportedRepositoryId = githubRepo.Id,
+                        SupportedRepository = githubRepo,
                         Name = "Get Contributor Statis",
                         Path = "/repos/{owner}/{repo}/stats/contributors",
                         Method = "GET"

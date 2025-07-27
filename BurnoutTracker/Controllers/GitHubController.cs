@@ -1,4 +1,5 @@
-﻿using BurnoutTracker.Application.Services;
+﻿using BurnoutTracker.Application.Dtos;
+using BurnoutTracker.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -16,10 +17,10 @@ namespace BurnoutTracker.Controllers
         }
 
         [HttpPost("token")]
-        public async Task<IActionResult> SaveToken([FromBody] string token, [FromBody] long repositoryTypeId)
+        public async Task<IActionResult> SaveToken(SaveTokenDto saveTokenDto)
         {
             var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            await _githubService.SaveUserTokenAsync(userId, token, repositoryTypeId);
+            await _githubService.SaveUserTokenAsync(userId, saveTokenDto.Token, saveTokenDto.RepositoryTypeId);
             return Ok();
         }
 
