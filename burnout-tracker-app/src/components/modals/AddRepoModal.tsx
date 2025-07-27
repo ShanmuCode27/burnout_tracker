@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, TextField, MenuItem, Stack
+  Button, TextField, MenuItem, Stack,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 
 const platforms = [
@@ -11,23 +13,34 @@ const platforms = [
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: { repositoryUrl: string; accessToken?: string; supportedRepositoryId: number }) => void;
+  onSubmit: (data: {
+    repositoryUrl: string;
+    accessToken?: string;
+    supportedRepositoryId: number;
+    branch: string;
+  }) => void;
 }
 
 export default function AddRepoModal({ open, onClose, onSubmit }: Props) {
   const [repositoryUrl, setRepositoryUrl] = useState('');
   const [accessToken, setAccessToken] = useState('');
   const [platformId, setPlatformId] = useState(1);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [branch, setBranch] = useState('main');
 
   const handleSubmit = () => {
     onSubmit({
       repositoryUrl,
-      accessToken: accessToken || undefined,
       supportedRepositoryId: platformId,
+      accessToken: isPrivate ? accessToken : undefined,
+      branch,
     });
+
     onClose();
     setRepositoryUrl('');
     setAccessToken('');
+    setIsPrivate(false);
+    setBranch('main');
   };
 
   return (
@@ -46,16 +59,37 @@ export default function AddRepoModal({ open, onClose, onSubmit }: Props) {
               <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
             ))}
           </TextField>
+
           <TextField
             label="Repository URL"
             value={repositoryUrl}
             onChange={(e) => setRepositoryUrl(e.target.value)}
             fullWidth
           />
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isPrivate}
+                onChange={(e) => setIsPrivate(e.target.checked)}
+              />
+            }
+            label="Private Repository?"
+          />
+
+          {isPrivate && (
+            <TextField
+              label="GitHub Token"
+              value={accessToken}
+              onChange={(e) => setAccessToken(e.target.value)}
+              fullWidth
+            />
+          )}
+
           <TextField
-            label="GitHub Token (optional)"
-            value={accessToken}
-            onChange={(e) => setAccessToken(e.target.value)}
+            label="Branch Name"
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
             fullWidth
           />
         </Stack>

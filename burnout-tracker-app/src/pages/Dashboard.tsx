@@ -1,48 +1,79 @@
+import {
+  Box,
+  Button,
+  Typography,
+  Grid,
+  Stack,
+  CircularProgress,
+} from '@mui/material';
 import { useEffect, useState } from 'react';
-import { Container, Typography, Button, Grid } from '@mui/material';
 import AddRepoModal from '../components/modals/AddRepoModal';
+import { fetchConnectedRepositories, connectRepository } from '../services/repoService';
+import type { ConnectedRepo } from '../types/common'
 import RepoCard from '../components/RepoCard';
-import { connectRepository, fetchConnectedRepositories } from '../services/repoService';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
-  const [repos, setRepos] = useState<any[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [repos, setRepos] = useState<ConnectedRepo[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const loadRepos = async () => {
-    const data = await fetchConnectedRepositories();
-    setRepos(data);
+  const fetchRepos = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchConnectedRepositories();
+      setRepos(data);
+    } catch (err) {
+      console.error('Failed to fetch repos:', err);
+    }
+    setLoading(false);
   };
 
-  const handleConnect = async (data: any) => {
-    await connectRepository(data);
-    await loadRepos();
+  const handleRepoConnect = async (data: {
+    repositoryUrl: string;
+    accessToken?: string;
+    supportedRepositoryId: number;
+    branch?: string;
+  }) => {
+    try {
+      await connectRepository(data);
+      fetchRepos();
+    } catch (err) {
+      console.error('Failed to connect repo:', err);
+    }
   };
 
   useEffect(() => {
-    loadRepos();
+    fetchRepos();
   }, []);
 
   return (
-    <Container sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom>Connected Repositories</Typography>
-      <Grid container spacing={2} mb={2}>
-        {repos.map(repo => (
-          <Grid size={{ xs: 26 , md: 6}} key={repo.id}>
-            <RepoCard repo={repo} />
-          </Grid>
-        ))}
-      </Grid>
-      <Button variant="contained" onClick={() => setModalOpen(true)}>
-        Add Repository
-      </Button>
+    <Box p={3}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h5">Connected Repositories</Typography>
+        <Button variant="contained" onClick={() => setAddModalOpen(true)}>
+          Connect Repository
+        </Button>
+      </Stack>
+
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <Grid container spacing={2}>
+          {repos.map((repo) => (
+            <Grid size={{ xs: 12, md: 6 }} key={repo.id}>
+             <RepoCard repo={repo} onClick={() => navigate(`repos/${repo.id}`)} />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+
       <AddRepoModal
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          loadRepos();
-        }}
-        onSubmit={handleConnect}
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onSubmit={handleRepoConnect}
       />
-    </Container>
+    </Box>
   );
 }

@@ -13,3 +13,7 @@ export async function connectRepository(data: {
   const res = await api.post('/repos/connect', data);
   return res.data;
 }
+
+export async function deleteRepository(id: number) {
+  await api.delete(`/repos/${id}`);
+}

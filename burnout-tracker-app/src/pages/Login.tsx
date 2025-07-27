@@ -4,11 +4,13 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const [username, setUsername] = useState('');
+  const [username, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const { updateAuth } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -17,6 +19,7 @@ export default function Login() {
       const token = res.data.token;
 
       localStorage.setItem('token', token);
+      updateAuth(token);
       setError('');
       navigate('/');
     } catch (err) {
@@ -31,7 +34,7 @@ export default function Login() {
         <TextField
           label="Username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => setUserName(e.target.value)}
         />
         <TextField
           label="Password"
