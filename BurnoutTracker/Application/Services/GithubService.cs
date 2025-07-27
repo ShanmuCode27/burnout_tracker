@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using BurnoutTracker.Application.Dtos.Github;
 using BurnoutTracker.Application.Interfaces;
+using BurnoutTracker.Utilities;
 
 namespace BurnoutTracker.Application.Services
 {
@@ -72,7 +73,7 @@ namespace BurnoutTracker.Application.Services
 
         public async Task<List<ContributorDto>> GetContributorsAsync(string owner, string repo, string? token = null)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{owner}/{repo}/contributors");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"repos/{owner}/{repo}/contributors");
             request.Headers.UserAgent.ParseAdd("burnout-tracker-app");
 
             if (!string.IsNullOrEmpty(token))
@@ -101,7 +102,7 @@ namespace BurnoutTracker.Application.Services
             var commitsApi = supportedApis.FirstOrDefault(api => api.Name.Equals("Get Commits", StringComparison.OrdinalIgnoreCase));
             if (commitsApi == null) return new();
 
-            var (owner, repo) = ParseRepoUrl(repositoryUrl);
+            var (owner, repo) = StringHelper.ParseRepoUrl(repositoryUrl);
             var since = DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-ddTHH:mm:ssZ");
 
             var url = commitsApi.Path
@@ -143,14 +144,60 @@ namespace BurnoutTracker.Application.Services
                 _logger.LogError(ex, "Errr");
                 return new();
             }
-
         }
 
-        private (string owner, string repo) ParseRepoUrl(string url)
+        public async Task<List<GitHubPullRequestDto>> GetPullRequestsAsync(string owner, string repo, string? accessToken)
         {
-            // Parse https://github.com/{owner}/{repo}
-            var parts = new Uri(url).AbsolutePath.Trim('/').Split('/');
-            return (parts[0], parts[1]);
+            var url = $"repos/{owner}/{repo}/pulls?state=all&per_page=300";
+
+            _client.DefaultRequestHeaders.UserAgent.ParseAdd("burnout-tracker-app");
+            if (!string.IsNullOrEmpty(accessToken))
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await _client.GetAsync(url);
+            if (!response.IsSuccessStatusCode) return new();
+
+            var prs = await response.Content.ReadFromJsonAsync<List<GitHubPullRequestDto>>() ?? new();
+            return prs;
+        }
+
+        public async Task<List<GitHubCommitDto>> GetCommitsDetailedAsync(string owner, string repo, string since, string? accessToken)
+        {
+            var commitListUrl = $"repos/{owner}/{repo}/commits?since={since}&per_page=100";
+
+            _client.DefaultRequestHeaders.UserAgent.ParseAdd("burnout-tracker-app");
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            }
+
+            var basicResponse = await _client.GetAsync(commitListUrl);
+            if (!basicResponse.IsSuccessStatusCode)
+                return new();
+
+            var basicCommits = await basicResponse.Content.ReadFromJsonAsync<List<GitHubCommitDto>>() ?? new();
+            var detailedCommits = new List<GitHubCommitDto>();
+
+            foreach (var commit in basicCommits)
+            {
+                if (string.IsNullOrEmpty(commit.Sha))
+                    continue;
+
+                var detailUrl = $"repos/{owner}/{repo}/commits/{commit.Sha}";
+                var detailResponse = await _client.GetAsync(detailUrl);
+
+                if (!detailResponse.IsSuccessStatusCode)
+                    continue;
+
+                var detailedCommit = await detailResponse.Content.ReadFromJsonAsync<GitHubCommitDto>();
+                if (detailedCommit != null)
+                    detailedCommits.Add(detailedCommit);
+
+                // short delay to reduce risk of hitting rate limits
+                await Task.Delay(100);
+            }
+
+            return detailedCommits;
         }
     }
 }

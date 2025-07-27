@@ -9,6 +9,7 @@ namespace BurnoutTracker.Application.Services
     public interface IRepositoryPlatformDispatcherService
     {
         Task<List<DeveloperActivityDto>> GetDeveloperActivityAsync(UserRepositoryConnection connection);
+        Task<IGitRepositoryService> GetGitRepositoryService(long repositoryTypeId);
     }
 
     public class RepositoryPlatformDispatcherService: IRepositoryPlatformDispatcherService
@@ -44,6 +45,21 @@ namespace BurnoutTracker.Application.Services
                 connection.Branch,
                 supportedRepo.Endpoints.ToList()
             );
+        }
+
+        public async Task<IGitRepositoryService> GetGitRepositoryService(long repositoryTypeId)
+        {
+            var supportedRepo = await _db.SupportedRepositories
+                .Include(r => r.Endpoints)
+                .FirstOrDefaultAsync(r => r.Id == repositoryTypeId);
+
+            if (supportedRepo == null)
+                throw new Exception("Unsupported repository platform");
+
+            if (!_platformServices.TryGetValue(supportedRepo.Name, out var service))
+                throw new NotImplementedException($"Platform '{supportedRepo.Name}' not supported");
+
+            return service;
         }
     }
 }

@@ -65,6 +65,7 @@ builder.Services.AddScoped<SeedService>();
 builder.Services.AddScoped<IRepositoryPlatformDispatcherService, RepositoryPlatformDispatcherService>();
 builder.Services.AddScoped<IBurnoutDetectionService, BurnoutDetectionService>();
 builder.Services.AddScoped<IRepoService, RepoService>();
+builder.Services.AddScoped<DeveloperMetricsCalculator>();
 builder.Services.AddHttpClient();
 
 builder.Services.AddHostedService<BurnoutSyncService>();

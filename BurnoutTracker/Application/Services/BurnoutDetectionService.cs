@@ -1,6 +1,7 @@
 ﻿using BurnoutTracker.Application.Dtos;
 using BurnoutTracker.Domain.Models.Entities;
 using BurnoutTracker.Infrastructure;
+using BurnoutTracker.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BurnoutTracker.Application.Services
@@ -12,17 +13,21 @@ namespace BurnoutTracker.Application.Services
         Task<List<DeveloperBurnoutState>> GetLatestDevState(long connectionId);
         Task<List<DeveloperBurnoutState>> GetDevHistory(long connectionId);
         Task<List<CommitStatsDto>> GetCommitStats(long connectionId, int days = 30);
+        Task<List<DeveloperActivityDto>> GetDeveloperStatsAsync(long repoConnectionId, long userId);
+        Task<DeveloperDetailDto?> GetDeveloperDetailAsync(long connectionId, long userId, string login);
     }
 
     public class BurnoutDetectionService: IBurnoutDetectionService
     {
         private readonly IRepositoryPlatformDispatcherService _dispatcher;
         private readonly BTDbContext _db;
+        private readonly DeveloperMetricsCalculator _developerMetricsCalculator;
 
-        public BurnoutDetectionService(IRepositoryPlatformDispatcherService dispatcher, BTDbContext db)
+        public BurnoutDetectionService(IRepositoryPlatformDispatcherService dispatcher, BTDbContext db, DeveloperMetricsCalculator developerMetricsCalculator)
         {
             _dispatcher = dispatcher;
             _db = db;
+            _developerMetricsCalculator = developerMetricsCalculator;
         }
 
         public async Task ProcessBurnoutStatesForAllConnectionsAsync()
@@ -89,8 +94,8 @@ namespace BurnoutTracker.Application.Services
                 {
                     var state = dev.WeeklyCommitCount switch
                     {
-                        >= 3 => "Active",
-                        >= 1 => "Warning",
+                        <= 30 => "Active",
+                        <= 60 => "Warning",
                         _ => "BurnedOut"
                     };
 
@@ -110,6 +115,78 @@ namespace BurnoutTracker.Application.Services
                 await _db.SaveChangesAsync();
             }
         }
-    }
 
+        public async Task<List<DeveloperActivityDto>> GetDeveloperStatsAsync(long repoConnectionId, long userId)
+        {
+            var connection = await _db.UserRepositoryConnections
+                .Include(r => r.SupportedRepository)
+                .FirstOrDefaultAsync(r => r.Id == repoConnectionId && r.UserId == userId);
+
+            if (connection == null)
+                throw new Exception("Repository connection not found.");
+
+            var gitService = await _dispatcher.GetGitRepositoryService(connection.SupportedRepositoryId);
+
+            var (owner, repo) = StringHelper.ParseRepoUrl(connection.RepositoryUrl);
+            var since = DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+            var commits = await gitService.GetCommitsDetailedAsync(owner, repo, since, connection.AccessToken);
+            var pullRequests = await gitService.GetPullRequestsAsync(owner, repo, connection.AccessToken);
+
+            if (commits == null || pullRequests == null)
+            {
+                return [];
+            }
+
+            var devMetrics = _developerMetricsCalculator.Calculate(commits, pullRequests);
+            return devMetrics;
+        }
+
+        public async Task<DeveloperDetailDto?> GetDeveloperDetailAsync(long connectionId, long userId, string login)
+        {
+            var connection = await _db.UserRepositoryConnections
+                .Include(c => c.SupportedRepository)
+                .FirstOrDefaultAsync(c => c.Id == connectionId && c.UserId == userId);
+
+            if (connection == null) return null;
+
+            var supportedApis = await _db.RepositoryApis
+                .Where(api => api.SupportedRepositoryId == connection.SupportedRepositoryId)
+                .ToListAsync();
+
+            var gitService = await _dispatcher.GetGitRepositoryService(connection.SupportedRepositoryId);
+            var (owner, repo) = StringHelper.ParseRepoUrl(connection.RepositoryUrl);
+            var pullRequests = await gitService.GetPullRequestsAsync(owner, repo, connection.AccessToken);
+            var since = DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+            var commits = await gitService.GetCommitsDetailedAsync(owner, repo, since, connection.AccessToken);
+
+
+            var devCommits = commits.Where(c => c.Author?.Login == login).ToList();
+            if (!devCommits.Any()) return null;
+
+            var metrics = _developerMetricsCalculator.Calculate(devCommits, pullRequests, login);
+
+            DateTime? latestWorkTimeUtc = null;
+            if (DateTime.TryParse(metrics.LatestWorkTimeUtc, out var parsedDate))
+            {
+                latestWorkTimeUtc = parsedDate;
+            }
+
+            return new DeveloperDetailDto
+            {
+                DeveloperLogin = login,
+                WeeklyCommitCount = metrics.WeeklyCommitCount,
+                TotalCommitCount = devCommits.Count,
+                PullRequestCount = metrics.PullRequestCount,
+                ReviewChangesCount = metrics.ReviewChangesCount,
+                NightWorkCount = metrics.NightWorkCount,
+                LatestWorkTimeUtc = latestWorkTimeUtc,
+                BurnoutScore = metrics.BurnoutScore,
+                BurnoutStatus = metrics.BurnoutStatus,
+                RevertCount = metrics.RevertCount,
+            };
+        }
+
+    }
 }

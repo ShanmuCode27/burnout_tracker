@@ -9,6 +9,7 @@ namespace BurnoutTracker.Application.Services
     {
         Task<List<ConnectedRepositoryDto>> GetConnectedRepositoriesAsync(long userId);
         Task ConnectRepositoryAsync(long userId, ConnectRepoRequestDto request);
+        Task DeleteRepository(long connectionId, long userId);
     }
 
     public class RepoService : IRepoService
@@ -31,7 +32,8 @@ namespace BurnoutTracker.Application.Services
                 {
                     Id = r.Id,
                     RepositoryUrl = r.RepositoryUrl,
-                    Platform = r.SupportedRepository.Name
+                    Platform = r.SupportedRepository.Name,
+                    SupportedRepositoryId = r.SupportedRepositoryId
                 })
                 .ToListAsync();
         }
@@ -67,6 +69,21 @@ namespace BurnoutTracker.Application.Services
             await _burnoutDetectionService.ProcessBurnoutStatesForConnectionsAsync(connection);
         }
 
-    }
+        public async Task DeleteRepository(long connectionId, long userId)
+        {
+            var connection = await _db.UserRepositoryConnections
+                .FirstOrDefaultAsync(c => c.Id == connectionId && c.UserId == userId);
 
+            if (connection == null)
+            {
+                //TODO: handle
+            }
+
+            var developerStates = await _db.DeveloperBurnoutStates.Where(dbs => Equals(dbs.UserRepositoryConnectionId, connectionId)).ToListAsync();
+            _db.DeveloperBurnoutStates.RemoveRange(developerStates);
+
+            _db.UserRepositoryConnections.Remove(connection);
+            await _db.SaveChangesAsync();
+        }
+    }
 }

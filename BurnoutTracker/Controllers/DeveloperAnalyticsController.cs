@@ -1,5 +1,7 @@
 ﻿using BurnoutTracker.Application.Services;
+using BurnoutTracker.Domain.Extensions;
 using BurnoutTracker.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BurnoutTracker.Controllers
@@ -39,6 +41,27 @@ namespace BurnoutTracker.Controllers
             var stats = await _burnoutDetectionService.GetCommitStats(connectionId, days);
 
             return Ok(stats);
+        }
+
+        [HttpGet("{connectionId}/developers")]
+        public async Task<IActionResult> GetDeveloperStats(long repoId, long connectionId)
+        {
+            var userId = Request.GetUserIdFromJwtToken();
+            var stats = await _burnoutDetectionService.GetDeveloperStatsAsync(connectionId, userId ?? 0);
+
+            return Ok(stats);
+        }
+
+        [HttpGet("{connectionId}/developers/{login}")]
+        public async Task<IActionResult> GetDeveloperDetails(long connectionId, string login)
+        {
+            var userId = Request.GetUserIdFromJwtToken();
+            if (userId == null) return Unauthorized();
+
+            var details = await _burnoutDetectionService.GetDeveloperDetailAsync(connectionId, userId.Value, login);
+            if (details == null) return NotFound();
+
+            return Ok(details);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace BurnoutTracker.Application.Dtos.Github
 {
-    public class CommitAuthor
+    public class GitHubUser
     {
         public string? Login { get; set; }
     }
