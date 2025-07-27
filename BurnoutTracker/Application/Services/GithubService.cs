@@ -27,6 +27,7 @@ namespace BurnoutTracker.Application.Services
         {
             _db = db;
             _client = factory.CreateClient("GitHub");
+            _client.BaseAddress = new Uri("https://api.github.com/");
             _logger = logger;
         }
 
@@ -59,7 +60,7 @@ namespace BurnoutTracker.Application.Services
             _client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("token", token);
 
-            var response = await _client.GetAsync("https://api.github.com/user/repos");
+            var response = await _client.GetAsync("user/repos");
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -95,9 +96,9 @@ namespace BurnoutTracker.Application.Services
         }
 
 
-        public async Task<List<DeveloperActivityDto>> GetDeveloperActivityAsync(string repositoryUrl, string? accessToken, List<RepositoryApi> supportedApis)
+        public async Task<List<DeveloperActivityDto>> GetDeveloperActivityAsync(string repositoryUrl, string? accessToken, string branch, List<RepositoryApi> supportedApis)
         {
-            var commitsApi = supportedApis.FirstOrDefault(api => api.Name.Equals("commits", StringComparison.OrdinalIgnoreCase));
+            var commitsApi = supportedApis.FirstOrDefault(api => api.Name.Equals("Get Commits", StringComparison.OrdinalIgnoreCase));
             if (commitsApi == null) return new();
 
             var (owner, repo) = ParseRepoUrl(repositoryUrl);
@@ -108,23 +109,41 @@ namespace BurnoutTracker.Application.Services
                 .Replace("{repo}", repo)
                 .Replace("{since}", since);
 
+            if (url.Contains("?"))
+            {
+                url = url + $"&sha={branch}";
+            } else
+            {
+                url = url + $"?sha={branch}";
+            }
+
             _client.DefaultRequestHeaders.UserAgent.ParseAdd("burnout-tracker-app");
             if (!string.IsNullOrEmpty(accessToken))
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            var response = await _client.GetAsync(url);
-            if (!response.IsSuccessStatusCode) return new();
+            try
+            {
+                var response = await _client.GetAsync(url);
+                if (!response.IsSuccessStatusCode) return new();
 
-            var data = await response.Content.ReadFromJsonAsync<List<GitHubCommitDto>>() ?? new();
+                var data = await response.Content.ReadFromJsonAsync<List<GitHubCommitDto>>() ?? new();
 
-            return data
-                .Where(c => c.Author?.Login != null)
-                .GroupBy(c => c.Author!.Login)
-                .Select(g => new DeveloperActivityDto
-                {
-                    DeveloperLogin = g.Key,
-                    WeeklyCommitCount = g.Count() / 4
-                }).ToList();
+                return data
+                    .Where(c => c.Author?.Login != null)
+                    .GroupBy(c => c.Author!.Login)
+                    .Select(g => new DeveloperActivityDto
+                    {
+                        DeveloperLogin = g.Key,
+                        WeeklyCommitCount = g.Count() / 4,
+                        TotalCommitCount = g.Count()
+                    }).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Errr");
+                return new();
+            }
+
         }
 
         private (string owner, string repo) ParseRepoUrl(string url)

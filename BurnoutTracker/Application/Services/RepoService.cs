@@ -57,7 +57,8 @@ namespace BurnoutTracker.Application.Services
                 UserId = user.Id,
                 RepositoryUrl = request.RepositoryUrl,
                 SupportedRepositoryId = repo.Id,
-                AccessToken = request.AccessToken
+                AccessToken = request.AccessToken,
+                Branch = request.Branch
             };
 
             _db.UserRepositoryConnections.Add(connection);

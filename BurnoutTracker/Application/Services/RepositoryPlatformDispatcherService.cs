@@ -22,7 +22,7 @@ namespace BurnoutTracker.Application.Services
             _db = db;
             _platformServices = new Dictionary<string, IGitRepositoryService> 
             {
-                { "github", githubService }
+                { "GitHub", githubService }
             };
         }
 
@@ -41,6 +41,7 @@ namespace BurnoutTracker.Application.Services
             return await service.GetDeveloperActivityAsync(
                 connection.RepositoryUrl,
                 connection.AccessToken,
+                connection.Branch,
                 supportedRepo.Endpoints.ToList()
             );
         }

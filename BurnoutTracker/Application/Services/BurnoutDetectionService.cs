@@ -80,11 +80,10 @@ namespace BurnoutTracker.Application.Services
         }
 
         private async Task ProcessRepoSync(List<UserRepositoryConnection> connections)
-        {
+       {
             foreach (var connection in connections)
             {
                 var activity = await _dispatcher.GetDeveloperActivityAsync(connection);
-                //var activity = new List<DeveloperActivityDto>();
 
                 foreach (var dev in activity)
                 {
@@ -100,6 +99,7 @@ namespace BurnoutTracker.Application.Services
                         UserRepositoryConnectionId = connection.Id,
                         DeveloperLogin = dev.DeveloperLogin,
                         State = state,
+                        TotalCommitCount = dev.TotalCommitCount,
                         WeeklyCommitCount = dev.WeeklyCommitCount,
                         RecordedAt = DateTime.UtcNow
                     };

@@ -4,5 +4,6 @@
     {
         public string DeveloperLogin { get; set; } = string.Empty;
         public int WeeklyCommitCount { get; set; }
+        public int TotalCommitCount { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using BurnoutTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BurnoutTracker.Migrations
 {
     [DbContext(typeof(BTDbContext))]
-    partial class BTDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250727110425_addTotalCommitsColumnToDeveloperBurnoutState")]
+    partial class addTotalCommitsColumnToDeveloperBurnoutState
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -109,10 +112,6 @@ namespace BurnoutTracker.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("AccessToken")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Branch")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("ConnectedAt")

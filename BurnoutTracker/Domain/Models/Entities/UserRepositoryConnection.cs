@@ -10,6 +10,7 @@
         public SupportedRepository SupportedRepository { get; set; } = null!;
         public string? AccessToken { get; set; }
         public DateTime ConnectedAt { get; set; } = DateTime.UtcNow;
+        public string Branch { get; set; } = "main";
     }
 
 }
