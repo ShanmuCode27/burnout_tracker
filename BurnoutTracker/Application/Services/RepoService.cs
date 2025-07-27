@@ -1,5 +1,5 @@
 ﻿using BurnoutTracker.Application.Dtos;
-using BurnoutTracker.Domain.Models;
+using BurnoutTracker.Domain.Models.Entities;
 using BurnoutTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +10,6 @@ namespace BurnoutTracker.Application.Services
         Task<List<ConnectedRepositoryDto>> GetConnectedRepositoriesAsync(long userId);
         Task ConnectRepositoryAsync(long userId, ConnectRepoRequestDto request);
     }
-
 
     public class RepoService : IRepoService
     {

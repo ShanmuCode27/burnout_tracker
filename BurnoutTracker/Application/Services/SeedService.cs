@@ -1,4 +1,5 @@
 ﻿using BurnoutTracker.Domain.Models;
+using BurnoutTracker.Domain.Models.Entities;
 using BurnoutTracker.Infrastructure;
 
 namespace BurnoutTracker.Application.Services

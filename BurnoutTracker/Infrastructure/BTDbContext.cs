@@ -1,4 +1,5 @@
 ﻿using BurnoutTracker.Domain.Models;
+using BurnoutTracker.Domain.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BurnoutTracker.Infrastructure
@@ -11,5 +12,6 @@ namespace BurnoutTracker.Infrastructure
         public DbSet<SupportedRepository> SupportedRepositories => Set<SupportedRepository>();
         public DbSet<RepositoryApi> RepositoryApis => Set<RepositoryApi>();
         public DbSet<UserRepositoryConnection> UserRepositoryConnections => Set<UserRepositoryConnection>();
+        public DbSet<DeveloperBurnoutState> DeveloperBurnoutStates => Set<DeveloperBurnoutState>();
     }
 }

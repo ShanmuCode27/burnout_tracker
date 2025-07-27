@@ -3,6 +3,7 @@ using System;
 using BurnoutTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BurnoutTracker.Migrations
 {
     [DbContext(typeof(BTDbContext))]
-    partial class BTDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250727063521_addDeveloperBurnoutState")]
+    partial class addDeveloperBurnoutState
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

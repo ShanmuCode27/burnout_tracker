@@ -3,7 +3,7 @@
     public class RepoDto
     {
         public string Name { get; set; } = "";
-        public string Full_Name { get; set; } = "";
+        public string FullName { get; set; } = "";
         public OwnerDto Owner { get; set; } = new();
     }
 }

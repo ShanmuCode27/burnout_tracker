@@ -1,4 +1,4 @@
-﻿using BurnoutTracker.Domain.Models;
+﻿using BurnoutTracker.Domain.Models.Entities;
 using BurnoutTracker.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,4 +1,4 @@
-﻿using BurnoutTracker.Domain.Models;
+﻿using BurnoutTracker.Domain.Models.Entities;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

@@ -1,4 +1,6 @@
-﻿namespace BurnoutTracker.Domain.Models
+﻿using BurnoutTracker.Domain.Models.Entities;
+
+namespace BurnoutTracker.Domain.Models
 {
     public class SupportedRepository
     {

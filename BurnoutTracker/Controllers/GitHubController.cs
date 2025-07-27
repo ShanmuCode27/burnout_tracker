@@ -9,9 +9,9 @@ namespace BurnoutTracker.Controllers
     [ApiController]
     public class GitHubController : ControllerBase
     {
-        private readonly IGitHubService _githubService;
+        private readonly IGitRepositoryPlatformService _githubService;
 
-        public GitHubController(IGitHubService githubService)
+        public GitHubController(IGitRepositoryPlatformService githubService)
         {
             _githubService = githubService;
         }

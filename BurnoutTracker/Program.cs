@@ -51,10 +51,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<JwtHelper>();
-builder.Services.AddHttpClient<IGitHubService, GitHubService>();
+builder.Services.AddHttpClient<IGitRepositoryPlatformService, GitHubService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<SeedService>();
 builder.Services.AddScoped<IRepoService, RepoService>();
+//builder.Services.AddScoped<IUserRepositoryService, UserRepositoryService>();
+
 
 builder.Services.AddDbContext<BTDbContext>(options =>
     options.UseMySql(

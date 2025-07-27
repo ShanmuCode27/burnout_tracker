@@ -1,4 +1,4 @@
-﻿namespace BurnoutTracker.Domain.Models
+﻿namespace BurnoutTracker.Domain.Models.Entities
 {
     public class User
     {

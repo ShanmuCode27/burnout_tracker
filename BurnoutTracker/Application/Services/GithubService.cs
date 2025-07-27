@@ -1,27 +1,30 @@
 ﻿using BurnoutTracker.Application.Dtos;
 using BurnoutTracker.Infrastructure;
-using BurnoutTracker.Domain.Models;
+using BurnoutTracker.Domain.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using BurnoutTracker.Application.Dtos.Github;
+using System.Net.Http;
 
 namespace BurnoutTracker.Application.Services
 {
-    public interface IGitHubService
+    public interface IGitRepositoryPlatformService
     {
         Task SaveUserTokenAsync(long userId, string token, long repositoryTypeId);
         Task<List<RepoDto>> GetUserReposAsync(long userId);
         Task<List<ContributorDto>> GetContributorsAsync(string owner, string repo, string? token = null);
+        Task<List<DeveloperActivityDto>> GetDeveloperActivityAsync(string repositoryUrl, string? accessToken, List<RepositoryApi> supportedApis);
     }
 
 
-    public class GitHubService : IGitHubService
+    public class GitHubService : IGitRepositoryPlatformService
     {
         private readonly BTDbContext _db;
         private readonly HttpClient _client;
-        private readonly ILogger _logger;
+        private readonly ILogger<GitHubService> _logger;
 
-        public GitHubService(BTDbContext db, IHttpClientFactory factory, ILogger logger)
+        public GitHubService(BTDbContext db, IHttpClientFactory factory, ILogger<GitHubService> logger)
         {
             _db = db;
             _client = factory.CreateClient("GitHub");
@@ -39,7 +42,7 @@ namespace BurnoutTracker.Application.Services
             }
             else
             {
-                await _db.UserRepositoryConnections.AddAsync(new UserRepositoryConnection { UserId = userId, AccessToken = token });
+                await _db.UserRepositoryConnections.AddAsync(new UserRepositoryConnection { UserId = userId, AccessToken = token, SupportedRepositoryId = repositoryTypeId });
             }
 
             await _db.SaveChangesAsync();
@@ -52,7 +55,7 @@ namespace BurnoutTracker.Application.Services
                 .Select(t => t.AccessToken)
                 .FirstOrDefaultAsync();
 
-            if (token == null) throw new UnauthorizedAccessException("GitHub token missing");
+            if (token == null) throw new UnauthorizedAccessException("Repository access token missing");
 
             _client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("token", token);
@@ -90,6 +93,46 @@ namespace BurnoutTracker.Application.Services
             });
 
             return contributors ?? new List<ContributorDto>();
+        }
+
+
+        public async Task<List<DeveloperActivityDto>> GetDeveloperActivityAsync(string repositoryUrl, string? accessToken, List<RepositoryApi> supportedApis)
+        {
+            var commitsApi = supportedApis.FirstOrDefault(api => api.Name.Equals("commits", StringComparison.OrdinalIgnoreCase));
+            if (commitsApi == null) return new();
+
+            var (owner, repo) = ParseRepoUrl(repositoryUrl);
+            var since = DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+            var url = commitsApi.Path
+                .Replace("{owner}", owner)
+                .Replace("{repo}", repo)
+                .Replace("{since}", since);
+
+            _client.DefaultRequestHeaders.UserAgent.ParseAdd("burnout-tracker-app");
+            if (!string.IsNullOrEmpty(accessToken))
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await _client.GetAsync(url);
+            if (!response.IsSuccessStatusCode) return new();
+
+            var data = await response.Content.ReadFromJsonAsync<List<GitHubCommitDto>>() ?? new();
+
+            return data
+                .Where(c => c.Author?.Login != null)
+                .GroupBy(c => c.Author!.Login)
+                .Select(g => new DeveloperActivityDto
+                {
+                    DeveloperLogin = g.Key,
+                    WeeklyCommitCount = g.Count() / 4
+                }).ToList();
+        }
+
+        private (string owner, string repo) ParseRepoUrl(string url)
+        {
+            // Parse https://github.com/{owner}/{repo}
+            var parts = new Uri(url).AbsolutePath.Trim('/').Split('/');
+            return (parts[0], parts[1]);
         }
     }
 }
