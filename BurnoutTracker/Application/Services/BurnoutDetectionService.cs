@@ -3,6 +3,7 @@ using BurnoutTracker.Domain.Models.Entities;
 using BurnoutTracker.Infrastructure;
 using BurnoutTracker.Utilities;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace BurnoutTracker.Application.Services
 {
@@ -90,26 +91,60 @@ namespace BurnoutTracker.Application.Services
             {
                 var activity = await _dispatcher.GetDeveloperActivityAsync(connection);
 
+                var gitService = await _dispatcher.GetGitRepositoryService(connection.SupportedRepositoryId);
+
+                var (owner, repo) = StringHelper.ParseRepoUrl(connection.RepositoryUrl);
+                var since = DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+                var commits = await gitService.GetCommitsDetailedAsync(owner, repo, since, connection.AccessToken);
+                var pullRequests = await gitService.GetPullRequestsAsync(owner, repo, connection.AccessToken);
+
                 foreach (var dev in activity)
                 {
-                    var state = dev.WeeklyCommitCount switch
-                    {
-                        <= 30 => "Active",
-                        <= 60 => "Warning",
-                        _ => "BurnedOut"
-                    };
+                    var metrics = _developerMetricsCalculator.Calculate(commits, pullRequests, dev.DeveloperLogin);
 
-                    var record = new DeveloperBurnoutState
+                    DateTime? latestWorkTimeUtc = null;
+                    if (DateTime.TryParse(metrics.LatestWorkTimeUtc, out var parsedDate))
                     {
-                        UserRepositoryConnectionId = connection.Id,
-                        DeveloperLogin = dev.DeveloperLogin,
-                        State = state,
-                        TotalCommitCount = dev.TotalCommitCount,
-                        WeeklyCommitCount = dev.WeeklyCommitCount,
-                        RecordedAt = DateTime.UtcNow
-                    };
+                        latestWorkTimeUtc = parsedDate;
+                    }
+                    var existingData = await _db.DeveloperBurnoutStates
+                        .FirstOrDefaultAsync(x => x.UserRepositoryConnectionId == connection.Id && x.DeveloperLogin == dev.DeveloperLogin);
 
-                    _db.DeveloperBurnoutStates.Add(record);
+                    if (existingData != null)
+                    {
+                        existingData.State = metrics.BurnoutStatus;
+                        existingData.TotalCommitCount = dev.TotalCommitCount;
+                        existingData.WeeklyCommitCount = dev.WeeklyCommitCount;
+                        existingData.RecordedAt = DateTime.UtcNow;
+                        existingData.PullRequestCount = dev.PullRequestCount;
+                        existingData.ReviewChangesCount = dev.ReviewChangesCount;
+                        existingData.NightWorkCount = dev.NightWorkCount;
+                        existingData.LatestWorkTimeUtc = latestWorkTimeUtc;
+                        existingData.RevertCount = metrics.RevertCount;
+                        existingData.BurnoutScore = metrics.BurnoutScore;
+
+                        _db.DeveloperBurnoutStates.Update(existingData);
+                    } else
+                    {
+                        var record = new DeveloperBurnoutState
+                        {
+                            UserRepositoryConnectionId = connection.Id,
+                            DeveloperLogin = dev.DeveloperLogin,
+                            State = metrics.BurnoutStatus,
+                            TotalCommitCount = dev.TotalCommitCount,
+                            WeeklyCommitCount = dev.WeeklyCommitCount,
+                            RecordedAt = DateTime.UtcNow,
+                            PullRequestCount = dev.PullRequestCount,
+                            ReviewChangesCount = dev.ReviewChangesCount,
+                            NightWorkCount = dev.NightWorkCount,
+                            LatestWorkTimeUtc = latestWorkTimeUtc,
+                            RevertCount = metrics.RevertCount,
+                            BurnoutScore = metrics.BurnoutScore
+                        };
+
+                        await _db.DeveloperBurnoutStates.AddAsync(record);
+                    }
                 }
 
                 await _db.SaveChangesAsync();
@@ -118,73 +153,58 @@ namespace BurnoutTracker.Application.Services
 
         public async Task<List<DeveloperActivityDto>> GetDeveloperStatsAsync(long repoConnectionId, long userId)
         {
-            var connection = await _db.UserRepositoryConnections
-                .Include(r => r.SupportedRepository)
-                .FirstOrDefaultAsync(r => r.Id == repoConnectionId && r.UserId == userId);
+            var developersInfo = await _db.DeveloperBurnoutStates
+                .Where(r => r.UserRepositoryConnectionId == repoConnectionId)
+                .ToListAsync();
 
-            if (connection == null)
-                throw new Exception("Repository connection not found.");
+            if (developersInfo == null)
+                throw new Exception("Repository or developer info not found.");
 
-            var gitService = await _dispatcher.GetGitRepositoryService(connection.SupportedRepositoryId);
+            var devActivities = new List<DeveloperActivityDto>();
 
-            var (owner, repo) = StringHelper.ParseRepoUrl(connection.RepositoryUrl);
-            var since = DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-ddTHH:mm:ssZ");
-
-            var commits = await gitService.GetCommitsDetailedAsync(owner, repo, since, connection.AccessToken);
-            var pullRequests = await gitService.GetPullRequestsAsync(owner, repo, connection.AccessToken);
-
-            if (commits == null || pullRequests == null)
+            foreach (var developerInfo in developersInfo)
             {
-                return [];
+                var devActivity = new DeveloperActivityDto
+                {
+                    DeveloperLogin = developerInfo.DeveloperLogin,
+                    WeeklyCommitCount = developerInfo.WeeklyCommitCount,
+                    TotalCommitCount = developerInfo.TotalCommitCount,
+                    PullRequestCount = developerInfo.PullRequestCount,
+                    ReviewChangesCount = developerInfo.ReviewChangesCount,
+                    NightWorkCount = developerInfo.NightWorkCount,
+                    LatestWorkTimeUtc = developerInfo.LatestWorkTimeUtc.ToString(),
+                    BurnoutScore = developerInfo.BurnoutScore,
+                    BurnoutStatus = developerInfo.State
+                };
+
+                devActivities.Add(devActivity);
             }
 
-            var devMetrics = _developerMetricsCalculator.Calculate(commits, pullRequests);
-            return devMetrics;
+            return devActivities;
         }
 
         public async Task<DeveloperDetailDto?> GetDeveloperDetailAsync(long connectionId, long userId, string login)
         {
-            var connection = await _db.UserRepositoryConnections
-                .Include(c => c.SupportedRepository)
-                .FirstOrDefaultAsync(c => c.Id == connectionId && c.UserId == userId);
+            var developerInfo = await _db.DeveloperBurnoutStates
+                .FirstOrDefaultAsync(
+                    c => c.UserRepositoryConnectionId == connectionId && 
+                    c.DeveloperLogin.Equals(login));
 
-            if (connection == null) return null;
+            if (developerInfo == null) return null;
 
-            var supportedApis = await _db.RepositoryApis
-                .Where(api => api.SupportedRepositoryId == connection.SupportedRepositoryId)
-                .ToListAsync();
-
-            var gitService = await _dispatcher.GetGitRepositoryService(connection.SupportedRepositoryId);
-            var (owner, repo) = StringHelper.ParseRepoUrl(connection.RepositoryUrl);
-            var pullRequests = await gitService.GetPullRequestsAsync(owner, repo, connection.AccessToken);
-            var since = DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-ddTHH:mm:ssZ");
-
-            var commits = await gitService.GetCommitsDetailedAsync(owner, repo, since, connection.AccessToken);
-
-
-            var devCommits = commits.Where(c => c.Author?.Login == login).ToList();
-            if (!devCommits.Any()) return null;
-
-            var metrics = _developerMetricsCalculator.Calculate(devCommits, pullRequests, login);
-
-            DateTime? latestWorkTimeUtc = null;
-            if (DateTime.TryParse(metrics.LatestWorkTimeUtc, out var parsedDate))
-            {
-                latestWorkTimeUtc = parsedDate;
-            }
 
             return new DeveloperDetailDto
             {
                 DeveloperLogin = login,
-                WeeklyCommitCount = metrics.WeeklyCommitCount,
-                TotalCommitCount = devCommits.Count,
-                PullRequestCount = metrics.PullRequestCount,
-                ReviewChangesCount = metrics.ReviewChangesCount,
-                NightWorkCount = metrics.NightWorkCount,
-                LatestWorkTimeUtc = latestWorkTimeUtc,
-                BurnoutScore = metrics.BurnoutScore,
-                BurnoutStatus = metrics.BurnoutStatus,
-                RevertCount = metrics.RevertCount,
+                WeeklyCommitCount = developerInfo.WeeklyCommitCount,
+                TotalCommitCount = developerInfo.TotalCommitCount,
+                PullRequestCount = developerInfo.PullRequestCount,
+                ReviewChangesCount = developerInfo.ReviewChangesCount,
+                NightWorkCount = developerInfo.NightWorkCount,
+                LatestWorkTimeUtc = developerInfo.LatestWorkTimeUtc,
+                BurnoutScore = developerInfo.BurnoutScore,
+                BurnoutStatus = developerInfo.State,
+                RevertCount = developerInfo.RevertCount
             };
         }
 
