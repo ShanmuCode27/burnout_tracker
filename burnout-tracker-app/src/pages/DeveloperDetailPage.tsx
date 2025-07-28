@@ -10,6 +10,7 @@ import {
   Grid,
   Button
 } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 import api from '../services/api';
 
@@ -39,7 +40,10 @@ export default function DeveloperDetailPage() {
 
   return (
     <Box p={3}>
-      <Button onClick={() => navigate(-1)}>
+      <Button
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate(-1)}
+      >
         Back
       </Button>
       <Typography variant="h4" gutterBottom>
@@ -52,11 +56,15 @@ export default function DeveloperDetailPage() {
           data.burnoutStatus === 'Active'
             ? 'success'
             : data.burnoutStatus === 'Warning'
-            ? 'warning'
-            : 'error'
+              ? 'warning'
+              : 'error'
         }
         sx={{ mb: 2 }}
       />
+
+      <Typography variant='subtitle1' textAlign='end' my='15px'>
+        ** This data covers the last 30 days
+      </Typography>
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>

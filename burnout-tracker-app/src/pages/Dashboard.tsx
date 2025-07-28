@@ -63,7 +63,9 @@ export default function Dashboard() {
         <Grid container spacing={2}>
           {repos.map((repo) => (
             <Grid size={{ xs: 12, md: 6 }} key={repo.id}>
-             <RepoCard repo={repo} onClick={() => navigate(`repos/${repo.id}`)} />
+             <RepoCard repo={repo} onClick={() => navigate(`repos/${repo.id}`, {
+                state:  { repositoryType: repo.platform, repositoryUrl: repo.repositoryUrl }
+             })} />
             </Grid>
           ))}
         </Grid>

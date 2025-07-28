@@ -1,4 +1,4 @@
-import { AppBar, Toolbar, Typography, Menu, Box, MenuItem, IconButton, Avatar } from '@mui/material';
+import { AppBar, Toolbar, Typography, Menu, Box, MenuItem, IconButton, Avatar, useTheme } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -7,6 +7,7 @@ export default function Header() {
   const { username, logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const open = Boolean(anchorEl);
 
@@ -28,7 +29,7 @@ export default function Header() {
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx={{ backgroundColor: theme.palette.primary.main  }}>
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Developer Burnout Tracker

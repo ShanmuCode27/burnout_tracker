@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
-  Container, TextField, Button, Stack, Typography, Alert
+  Container, TextField, Button, Stack, Typography, Alert,
+  useTheme
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -12,6 +13,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const { updateAuth } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const handleLogin = async () => {
     try {
@@ -28,9 +30,9 @@ export default function Login() {
   };
 
   return (
-    <Container sx={{ mt: 6 }}>
-      <Typography variant="h5" gutterBottom>Login</Typography>
+    <Container sx={{ mt: 14, display: 'flex', justifyContent: 'center', alignContent: 'center' }}>
       <Stack spacing={2} sx={{ maxWidth: 400 }}>
+        <Typography variant="h5" gutterBottom>Login</Typography>
         <TextField
           label="Username"
           value={username}
@@ -46,7 +48,7 @@ export default function Login() {
         <Button variant="contained" onClick={handleLogin}>
           Login
         </Button>
-        <Button variant="text" onClick={() => navigate('/signup')}>
+        <Button variant="text" onClick={() => navigate('/signup')} sx={{ color: theme.palette.secondary.light }}>
           Don’t have an account? Sign up
         </Button>
       </Stack>

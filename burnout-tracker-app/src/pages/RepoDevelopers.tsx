@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   Grid,
   Card,
@@ -8,8 +8,10 @@ import {
   Chip,
   CircularProgress,
   Box,
-  Button
+  Button,
+  Stack
 } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 import api from '../services/api';
@@ -25,6 +27,9 @@ export default function RepoDevelopersPage() {
   const navigate = useNavigate();
   const [developers, setDevelopers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+
+  const state = location.state || {};
 
   useEffect(() => {
     async function fetchData() {
@@ -59,12 +64,25 @@ export default function RepoDevelopersPage() {
 
   return (
     <Box p={3}>
-      <Button onClick={() => navigate(-1)}>
+      <Button 
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate(-1)}
+      >
         Back
       </Button>
-      <Typography variant="h4" gutterBottom>
-        Developers in Repository #{repoId}
-      </Typography>
+      <Stack direction="row" justifyContent="space-between">
+        <Typography variant="h4" gutterBottom>
+          Contributors
+        </Typography>
+        <Typography variant='subtitle1'>
+          ** This data covers the last 30 days
+        </Typography>
+      </Stack>
+      <Button>
+        <Link to={state.repositoryUrl} target="_blank">
+          {state.repositoryUrl}
+        </Link>
+      </Button>
 
       <Box height={300} mb={4}>
         <ResponsiveContainer>

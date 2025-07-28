@@ -20,9 +20,9 @@ export default function Signup() {
   };
 
   return (
-    <Container sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom>Sign Up</Typography>
+    <Container sx={{ mt: 14, display: 'flex', justifyContent: 'center', alignContent: 'center' }}>
       <Stack spacing={2} sx={{ maxWidth: 400 }}>
+        <Typography variant="h5" gutterBottom>Sign Up</Typography>
         <TextField label="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
         <TextField label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         <Button variant="contained" onClick={handleSignup}>Sign Up</Button>

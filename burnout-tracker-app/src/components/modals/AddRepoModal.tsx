@@ -3,7 +3,8 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, MenuItem, Stack,
   FormControlLabel,
-  Switch
+  Switch,
+  Typography
 } from '@mui/material';
 
 const platforms = [
@@ -46,7 +47,7 @@ export default function AddRepoModal({ open, onClose, onSubmit }: Props) {
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Connect Repository</DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ width: 500 }}>
         <Stack spacing={2} mt={1}>
           <TextField
             select
@@ -61,9 +62,16 @@ export default function AddRepoModal({ open, onClose, onSubmit }: Props) {
           </TextField>
 
           <TextField
+            required
             label="Repository URL"
             value={repositoryUrl}
             onChange={(e) => setRepositoryUrl(e.target.value)}
+            fullWidth
+          />
+          <TextField
+            label="Branch Name"
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
             fullWidth
           />
 
@@ -76,7 +84,6 @@ export default function AddRepoModal({ open, onClose, onSubmit }: Props) {
             }
             label="Private Repository?"
           />
-
           {isPrivate && (
             <TextField
               label="GitHub Token"
@@ -85,14 +92,10 @@ export default function AddRepoModal({ open, onClose, onSubmit }: Props) {
               fullWidth
             />
           )}
-
-          <TextField
-            label="Branch Name"
-            value={branch}
-            onChange={(e) => setBranch(e.target.value)}
-            fullWidth
-          />
         </Stack>
+        <Typography variant='body1' textAlign='end' fontSize={12} my='5px'>
+          Please note that data synchronization may take a few seconds to several minutes
+        </Typography>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
