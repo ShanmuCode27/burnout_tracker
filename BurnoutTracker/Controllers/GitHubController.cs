@@ -1,0 +1,43 @@
+﻿using BurnoutTracker.Application.Dtos;
+using BurnoutTracker.Application.Services;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace BurnoutTracker.Controllers
+{
+    [Route("api/github")]
+    [ApiController]
+    public class GitHubController : ControllerBase
+    {
+        private readonly IGitHubRepositoryPlatformService _githubService;
+
+        public GitHubController(IGitHubRepositoryPlatformService githubService)
+        {
+            _githubService = githubService;
+        }
+
+        [HttpPost("token")]
+        public async Task<IActionResult> SaveToken(SaveTokenDto saveTokenDto)
+        {
+            var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _githubService.SaveUserTokenAsync(userId, saveTokenDto.Token, saveTokenDto.RepositoryTypeId);
+            return Ok();
+        }
+
+        [HttpGet("repos")]
+        public async Task<IActionResult> GetRepos()
+        {
+            var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var repos = await _githubService.GetUserReposAsync(userId);
+            return Ok(repos);
+        }
+
+
+        [HttpGet("contributors")]
+        public async Task<IActionResult> GetContributors([FromQuery] string owner, [FromQuery] string repo, [FromQuery] string? token = null)
+        {
+            var contributors = await _githubService.GetContributorsAsync(owner, repo, token);
+            return Ok(contributors);
+        }
+    }
+}
