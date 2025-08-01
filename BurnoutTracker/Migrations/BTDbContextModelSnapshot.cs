@@ -88,15 +88,12 @@ namespace BurnoutTracker.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("SupportedRepositoryId")
-                        .HasColumnType("int");
-
-                    b.Property<long>("SupportedRepositoryId1")
+                    b.Property<long>("SupportedRepositoryId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SupportedRepositoryId1");
+                    b.HasIndex("SupportedRepositoryId");
 
                     b.ToTable("RepositoryApis");
                 });
@@ -189,7 +186,7 @@ namespace BurnoutTracker.Migrations
                 {
                     b.HasOne("BurnoutTracker.Domain.Models.SupportedRepository", "SupportedRepository")
                         .WithMany("Endpoints")
-                        .HasForeignKey("SupportedRepositoryId1")
+                        .HasForeignKey("SupportedRepositoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

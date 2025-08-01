@@ -15,9 +15,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder => {
-        builder.AllowAnyOrigin();
+        builder.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://52.23.183.231:3000");
         builder.AllowAnyMethod();
         builder.AllowAnyHeader();
+        builder.AllowCredentials();
     });
 });
 
@@ -53,9 +54,12 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<BTDbContext>(options =>
     options.UseMySql(
-        builder.Configuration.GetConnectionString("Default"),
-        new MySqlServerVersion(new Version(8, 4, 0))
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        new MySqlServerVersion(new Version(8, 4, 0)),
+        options => options.EnableRetryOnFailure()
     ));
+
+Console.WriteLine($"Using connection string: {builder.Configuration.GetConnectionString("DefaultConnection")}");
 
 
 builder.Services.AddScoped<JwtHelper>();
@@ -79,6 +83,13 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BTDbContext>();
+    db.Database.Migrate();
+    Console.WriteLine("Migration completed");
 }
 
 using (var scope = app.Services.CreateScope())

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BurnoutTracker.Migrations
 {
     /// <inheritdoc />
-    public partial class initialCreate : Migration
+    public partial class recreatedInitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -55,8 +55,7 @@ namespace BurnoutTracker.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    SupportedRepositoryId = table.Column<int>(type: "int", nullable: false),
-                    SupportedRepositoryId1 = table.Column<long>(type: "bigint", nullable: false),
+                    SupportedRepositoryId = table.Column<long>(type: "bigint", nullable: false),
                     Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Path = table.Column<string>(type: "longtext", nullable: false)
@@ -68,8 +67,8 @@ namespace BurnoutTracker.Migrations
                 {
                     table.PrimaryKey("PK_RepositoryApis", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RepositoryApis_SupportedRepositories_SupportedRepositoryId1",
-                        column: x => x.SupportedRepositoryId1,
+                        name: "FK_RepositoryApis_SupportedRepositories_SupportedRepositoryId",
+                        column: x => x.SupportedRepositoryId,
                         principalTable: "SupportedRepositories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -88,7 +87,9 @@ namespace BurnoutTracker.Migrations
                     SupportedRepositoryId = table.Column<long>(type: "bigint", nullable: false),
                     AccessToken = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ConnectedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    ConnectedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    Branch = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
@@ -108,10 +109,48 @@ namespace BurnoutTracker.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateTable(
+                name: "DeveloperBurnoutStates",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    UserRepositoryConnectionId = table.Column<long>(type: "bigint", nullable: false),
+                    DeveloperLogin = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    State = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    WeeklyCommitCount = table.Column<int>(type: "int", nullable: false),
+                    TotalCommitCount = table.Column<int>(type: "int", nullable: false),
+                    RecordedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    PullRequestCount = table.Column<int>(type: "int", nullable: false),
+                    ReviewChangesCount = table.Column<int>(type: "int", nullable: false),
+                    NightWorkCount = table.Column<int>(type: "int", nullable: false),
+                    LatestWorkTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    RevertCount = table.Column<int>(type: "int", nullable: false),
+                    BurnoutScore = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DeveloperBurnoutStates", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DeveloperBurnoutStates_UserRepositoryConnections_UserReposit~",
+                        column: x => x.UserRepositoryConnectionId,
+                        principalTable: "UserRepositoryConnections",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateIndex(
-                name: "IX_RepositoryApis_SupportedRepositoryId1",
+                name: "IX_DeveloperBurnoutStates_UserRepositoryConnectionId",
+                table: "DeveloperBurnoutStates",
+                column: "UserRepositoryConnectionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RepositoryApis_SupportedRepositoryId",
                 table: "RepositoryApis",
-                column: "SupportedRepositoryId1");
+                column: "SupportedRepositoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserRepositoryConnections_SupportedRepositoryId",
@@ -127,6 +166,9 @@ namespace BurnoutTracker.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "DeveloperBurnoutStates");
+
             migrationBuilder.DropTable(
                 name: "RepositoryApis");
 
